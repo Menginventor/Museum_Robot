@@ -12,16 +12,16 @@ Motor
 reduction 1/51
 noload speed 100 RPM
 */
-QEI wheel_L (PC_5, PC_6, NC, 500, QEI::X4_ENCODING);// (PinName channelA, PinName channelB, PinName index, int pulsesPerRev, Encoding encoding=X2_ENCODING)
-QEI wheel_R (PA_11, PB_12, NC, 500, QEI::X4_ENCODING);
+QEI wheel_L (PC_6, PC_5, NC, 500, QEI::X4_ENCODING);// (PinName channelA, PinName channelB, PinName index, int pulsesPerRev, Encoding encoding=X2_ENCODING)
+QEI wheel_R (PA_12, PA_11, NC, 500, QEI::X4_ENCODING);
 Cytron_DC motor_L (PB_13,PB_14);//(PinName dir,PinName pwm);
-Cytron_DC motor_R (PB_1,PB_15);//(PinName dir,PinName pwm);
+Cytron_DC motor_R (PB_15,PB_1);//(PinName dir,PinName pwm);
 Serial pc(USBTX, USBRX);
 Timer t;
 Ticker control_loop_tick;
 float desireSpeed_L,desireSpeed_R;
 float control_loop_period =  1.0/100.0;//100-Hz
-
+int wheel_L_pos = 0,wheel_R_pos = 0;
 void control_loop_fc();
 int main() {
         pc.baud(115200);
@@ -31,8 +31,8 @@ int main() {
         //desireSpeed_R = 50000;
         float motor_power = 0.0;
         while(1) {
-                if(t.read() >2)motor_power = 2.0;
-                //float motor_power = sin(2.0*t.read());
+                //if(t.read() >2)motor_power = 2.0;
+                //float motor_power = sin(t.read());
 
                 //pc.printf("%f,%f,%f,%f\n",my_QE.velocity,-motor_power*100000,100000.0,-100000.0);
                 //pc.printf("%f\n",my_QE.pos_count_period_debug *1000000.0);
@@ -42,8 +42,8 @@ int main() {
                 //motor_R.motor_drive(1);
                 //pc.printf("%f\r\n",motor_power);
                 //float motor_power = int(t.read())%6/3;
-                desireSpeed_L = 50000*motor_power;
-                desireSpeed_R = 50000*motor_power;
+                //desireSpeed_L = 50000*motor_power;
+                //desireSpeed_R = 50000*motor_power;
         }
 }
 void control_loop_fc(){
@@ -55,6 +55,8 @@ void control_loop_fc(){
     float KI_R = 1.0/10000.0;
     float pulseL = float(wheel_L.getPulses());
     float pulseR = float(wheel_R.getPulses());
+    wheel_L_pos += wheel_L.getPulses();
+    wheel_R_pos += wheel_R.getPulses();
     float crr_speed_L = pulseL/control_loop_period;
     float crr_speed_R = pulseR/control_loop_period;
     //max 109,600 P/S
@@ -102,8 +104,8 @@ void control_loop_fc(){
     motor_L.motor_drive(u_L);
     motor_R.motor_drive(u_R);
     //pc.printf("%f\t%f\t%f\t%f\t%f\r\n",t.read(),desireSpeed_L,desireSpeed_R,crr_speed_L,crr_speed_R);
-      pc.printf("%f\t%f\t%f\r\n",t.read(),motor_control_speed_L,crr_speed_L);
+      //pc.printf("%f\t%f\r\n",crr_speed_L,crr_speed_R);
     //pc.printf("%f\t%f\t%f\t%f\r\n",desireSpeed_L,desireSpeed_R,crr_speed_L,crr_speed_R);
     //pc.printf("%f\t%f\t%f\t%f\t%f\r\n",desireSpeed_L,motor_control_speed_L,crr_speed_L,err_L,u_L*50000);
-
+    pc.printf("wheel L = %d,wheel R = %d\n", wheel_L_pos,wheel_R_pos);
 }
