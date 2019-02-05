@@ -8,14 +8,16 @@ def find_nucleo_port(ports):
     target_description = 'STMicroelectronics STLink Virtual COM Port'
 
     port_name = [port.device for port in ports if port.description[0:len(target_description)] == target_description]
+    print(ports[1].description)
     return port_name
 
 while True:#Conecting Loop
-    nucleo_port = find_nucleo_port(ports)[0]
-    if nucleo_port == None:
+    nucleo_port = find_nucleo_port(ports)
+    if len(nucleo_port) == 0:
         print('Port not found')
         exit(0)
-    serial_port.port = nucleo_port
+
+    serial_port.port = nucleo_port[0]
     print(serial_port.port)
     serial_port.baudrate = 9600
     serial_port.timeout = 1
