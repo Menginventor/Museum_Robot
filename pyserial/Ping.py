@@ -1,14 +1,16 @@
 import serial
+from sys import platform
 import time
 import serial.tools.list_ports
 serial_port = serial.Serial()
 ports =  serial.tools.list_ports.comports(include_links=False)
 
 def find_nucleo_port(ports):
-    target_description = 'STMicroelectronics STLink Virtual COM Port'
+    if platform == 'win32':
+        target_description = 'STMicroelectronics STLink Virtual COM Port'
 
     port_name = [port.device for port in ports if port.description[0:len(target_description)] == target_description]
-    print(ports[1].description)
+
     return port_name
 
 while True:#Conecting Loop
