@@ -27,7 +27,7 @@ while True:#Conecting Loop
     serial_port.port = nucleo_port[0]
     print(serial_port.port)
     serial_port.baudrate = 9600
-    serial_port.timeout = 1
+    serial_port.timeout = 10
     try:
         serial_port.open()
         break
@@ -38,7 +38,7 @@ while True:#Conecting Loop
 
 
 print('connected')
-for i in range(10000):
-    serial_port.write(b'test %d \r\n'%i)
-    response = serial_port.readline()
+while True:
+
+    response = serial_port.readline().decode('UTF-8')
     print(response)

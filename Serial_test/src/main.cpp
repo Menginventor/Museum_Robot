@@ -5,6 +5,8 @@ Serial pc(USBTX, USBRX); // tx, rx
 int main() {
   pc.printf("Hello World!");
   while(1) {
-    pc.putc(pc.getc() );
+    if(pc.readable()){
+      pc.putc(pc.getc() );
+    }
   }
  }

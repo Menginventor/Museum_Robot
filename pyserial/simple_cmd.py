@@ -38,7 +38,17 @@ while True:#Conecting Loop
 
 
 print('connected')
-for i in range(10000):
-    serial_port.write(b'test %d \r\n'%i)
-    response = serial_port.readline()
-    print(response)
+while True:
+
+    serial_port.write(b'$L50000 R50000 \r\n')
+    print('sending')
+    while serial_port.in_waiting >0:
+        response = serial_port.readline().decode('UTF-8')
+        print(response)
+    time.sleep(1)
+    serial_port.write(b'$L0 R0 \r\n')
+    print('sending')
+    while serial_port.in_waiting > 0:
+        response = serial_port.readline().decode('UTF-8')
+        print(response)
+    time.sleep(1)

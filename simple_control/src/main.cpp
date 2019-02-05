@@ -1,8 +1,14 @@
-#include <mbed.h>
+/*
+*simple control
 
+
+*/
+#include <mbed.h>
 #include "QEI.h"]
 #include <Cytron_DC_drive.h>
-
+#include <cstdlib>
+#define UNDEFINE_COMMUNICATION -1
+#define ASCII_COMMUNICATION 1
 //AQE QE_L (PC_5,PC_6);
 //AQE QE_R (PA_11,PB_12);
 /*
@@ -26,72 +32,143 @@ Timer t;
 Ticker control_loop_tick;
 float desireSpeed_L,desireSpeed_R;
 float control_loop_period =  1.0/100.0;//100-Hz
-int wheel_L_pos = 0,wheel_R_pos = 0;
-int wheel_L_goal_pos = 700000;
+
 void control_loop_fc();
 char dataSerial = '\0';
 bool serialFlag = false;
-void SerialEvent(){
-  serialFlag = true;
-  dataSerial =  pc.getc();
+char Serial_buffer[100];
+int Serial_buffer_index = 0;
+int comunication_mode = UNDEFINE_COMMUNICATION;
+void clear_Serial_buffer(){
+  for(int i = 0;i<sizeof(Serial_buffer);i++){
+    Serial_buffer[i] = '\0';
+  }
+  Serial_buffer_index = 0;
 }
+bool isNumber(char ch){
+  if (ch >= '0' && ch<= '9')return true;
+  else if (ch == '.' || ch == '-' || ch == '+')return true;
+  else return false;
+}
+void process_ascii_cmd(char buffer[]){
+  //pc.printf("ASCII mode:%s , %d\r\n",buffer,sizeof(buffer));
+  char sub_buffer[20] = "";
+  int sub_buffer_index = 0;
+  float L_speed = 0.0;
+  float R_speed = 0.0;
 
+  int index = 0;
+  while(buffer[index] != '\0'){
+    char crr_ch = buffer[index];
+    if(crr_ch != ' '){
+        if(crr_ch == 'L'){
+          //printf("found L\r\n");
+          sub_buffer_index = 0;
+          sub_buffer[sub_buffer_index] = '\0';
+          index++;
+          while(true){
+              crr_ch = buffer[index];
+              if(isNumber(crr_ch)){
+                sub_buffer[sub_buffer_index] = crr_ch;
+                sub_buffer_index++;
+                index++;
+              }
+              else{
+                sub_buffer[sub_buffer_index] = '\0';
+                //printf("L = \"%s\"\n",sub_buffer);
+                L_speed = atof(sub_buffer);
+                desireSpeed_L = L_speed;
+                //printf("L val = \"%f\"\n",value);
+                break;
+              }
+          }
+        }//found L
+
+        else if(crr_ch == 'R'){
+          //printf("found R\r\n");
+          sub_buffer_index = 0;
+          sub_buffer[sub_buffer_index] = '\0';
+          index++;
+          while(true){
+              crr_ch = buffer[index];
+              if(isNumber(crr_ch)){
+                sub_buffer[sub_buffer_index] = crr_ch;
+                sub_buffer_index++;
+                index++;
+              }
+              else{
+                sub_buffer[sub_buffer_index] = '\0';
+                R_speed= atof(sub_buffer);
+                desireSpeed_R = R_speed;
+                break;
+              }
+
+          }
+        }//found R
+
+
+    }
+    index++;
+  }
+
+
+}
 int main() {
         pc.baud(9600);
         pc.printf("%s\n","startprogram" );
-        pc.attach(&SerialEvent);
+
         control_loop_tick.attach(&control_loop_fc,control_loop_period);//100-Hz
         t.start();
         //desireSpeed_L = 50000;
         //desireSpeed_R = 50000;
-        int count = 0;
+
+
+        float timer = t.read();
+
         while(1) {
-            //wait(0.5);
+            if(pc.readable()){
 
-            if(serialFlag){
-              serialFlag = false;
-              pc.printf("get %c\n", dataSerial);
+              char serial_read = pc.getc();
+
+              if(comunication_mode==ASCII_COMMUNICATION&&(serial_read == '\r' || serial_read == '\n')){
+                if(Serial_buffer_index!= 0){
+                  process_ascii_cmd(Serial_buffer);
+                  printf("speed L = %f,speed R = %f\r\n", desireSpeed_L,desireSpeed_R);
+                  //pc.printf("ASCII mode:%s\r\n",Serial_buffer);
+                }
+                clear_Serial_buffer();
+              }
+              else{
+                if(Serial_buffer_index == 0 )comunication_mode=ASCII_COMMUNICATION;
+                Serial_buffer[Serial_buffer_index] = serial_read;
+                Serial_buffer_index++;
+              }
+
             }
-
-                //if(t.read() >2)motor_power = 2.0;
-                //float motor_power = sin(t.read());
-
-                //pc.printf("%f,%f,%f,%f\n",my_QE.velocity,-motor_power*100000,100000.0,-100000.0);
-                //pc.printf("%f\n",my_QE.pos_count_period_debug *1000000.0);
-                //motor_L.motor_drive(motor_power);
-                //motor_R.motor_drive(motor_power);
-                //motor_L.motor_drive(1);
-                //motor_R.motor_drive(1);
-                //pc.printf("%f\r\n",motor_power);
-                //float motor_power = int(t.read())%6/3;
-                //desireSpeed_L = 50000*motor_power;
-                //desireSpeed_R = 50000*motor_power;
+            //printf("speed L = %f,speed R = %f\r\n", desireSpeed_L,desireSpeed_R);
+            if(t.read()-timer >=1){
+              timer +=1.0;
+              printf("OK for %d\n",int(timer) );
+            }
         }
         printf("exit program\n" );
 }
 void control_loop_fc(){
-    //pc.printf("%f,%f\r\n",QE_L.velocity,QE_R.velocity); 	getCurrentState (
-    //pc.printf("%d,%d\r\n",wheel_L.getPulses(),wheel_R.getPulses());
-    float error_pos_L = float(wheel_L_goal_pos-wheel_L_pos);
-    //pc.printf("%f\n",error_pos_L);
-    //desireSpeed_L = error_pos_L;
-    if (desireSpeed_L>50000)desireSpeed_L = 50000;
-    ///
+
     float KP_L = 1.0/100000.0;
     float KP_R = 1.0/100000.0;
     float KI_L = 1.0/10000.0;
     float KI_R = 1.0/10000.0;
     float pulseL = float(wheel_L.getPulses());
     float pulseR = float(wheel_R.getPulses());
-    wheel_L_pos += wheel_L.getPulses();
-    wheel_R_pos += wheel_R.getPulses();
+
     float crr_speed_L = pulseL/control_loop_period;
     float crr_speed_R = pulseR/control_loop_period;
     //max 109,600 P/S
     wheel_L.reset();
     wheel_R.reset();
 
-    float max_acc = 50000;
+    float max_acc = 100000;
     static float integral_err_L = 0;
     static float integral_err_R = 0;
 
