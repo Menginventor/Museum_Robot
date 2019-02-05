@@ -8,7 +8,12 @@ ports =  serial.tools.list_ports.comports(include_links=False)
 def find_nucleo_port(ports):
     if platform == 'win32':
         target_description = 'STMicroelectronics STLink Virtual COM Port'
-
+    elif platform =='darwin':
+        target_description = 'STM32 STLink'
+        
+    else:
+        print('unknow platform',platform)
+        print()
     port_name = [port.device for port in ports if port.description[0:len(target_description)] == target_description]
 
     return port_name
