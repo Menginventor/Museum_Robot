@@ -54,23 +54,23 @@ while True:
                 #print('Forward')
                 while serial_port.out_waiting>0:
                     pass
-                serial_port.write(b'$L50000 R-50000\r\n')
+                serial_port.write(b'$L100000 R-100000\r\n')
 
             elif event.key == pygame.K_s:
                 #print('Backward')
                 while serial_port.out_waiting>0:
                     pass
-                serial_port.write(b'$L-50000 R50000\r\n')
+                serial_port.write(b'$L-100000 R100000\r\n')
             if event.key == pygame.K_a:
                 #print('Left')
                 while serial_port.out_waiting>0:
                     pass
-                serial_port.write(b'$L-50000 R-50000\r\n')
+                serial_port.write(b'$L-100000 R-100000\r\n')
             elif event.key == pygame.K_d:
                 print('Right')
                 while serial_port.out_waiting>0:
                     pass
-                serial_port.write(b'$L50000 R50000\r\n')
+                serial_port.write(b'$L100000 R100000\r\n')
                 print('sending')
         if event.type == pygame.KEYUP:
             #print('key up')

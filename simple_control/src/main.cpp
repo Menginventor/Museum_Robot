@@ -168,7 +168,7 @@ void control_loop_fc(){
     wheel_L.reset();
     wheel_R.reset();
 
-    float max_acc = 100000;
+    float max_acc = 200000.0;
     static float integral_err_L = 0;
     static float integral_err_R = 0;
 
