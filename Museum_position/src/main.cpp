@@ -2,6 +2,7 @@
 #include <AQE.h>
 #include "QEI.h"]
 #include <Cytron_DC_drive.h>
+//simple wheel's position control
 
 //AQE QE_L (PC_5,PC_6);
 //AQE QE_R (PA_11,PB_12);
@@ -9,11 +10,15 @@
 Encoder : 500P/R
 <GND,Black>,<INDEX,Yellow>,<Chanel A,Green>,<VCC,Red>,<Chanel B,White>
 Motor
-reduction 1/51
+reduction 1/51**change to 1:42
+
 noload speed 100 RPM
 */
 QEI wheel_L (PC_6, PC_5, NC, 500, QEI::X4_ENCODING);// (PinName channelA, PinName channelB, PinName index, int pulsesPerRev, Encoding encoding=X2_ENCODING)
 QEI wheel_R (PA_12, PA_11, NC, 500, QEI::X4_ENCODING);
+//X4 Encoding means 4 step per pulse's phase
+//with 500 PPR Encoder means 500(4) = 2000 step per encoder's revolution
+//with 1/51 Gear reduction means 1 wheel revolution equal 42 encoder's revolution which means 84000 reading step.
 Cytron_DC motor_L (PB_13,PB_14);//(PinName dir,PinName pwm);
 Cytron_DC motor_R (PB_15,PB_1);//(PinName dir,PinName pwm);
 Serial pc(USBTX, USBRX);
@@ -22,7 +27,7 @@ Ticker control_loop_tick;
 float desireSpeed_L,desireSpeed_R;
 float control_loop_period =  1.0/100.0;//100-Hz
 int wheel_L_pos = 0,wheel_R_pos = 0;
-int wheel_L_goal_pos = 700000;
+int wheel_L_goal_pos = 7421680;
 void control_loop_fc();
 int main() {
         pc.baud(115200);
@@ -113,7 +118,8 @@ void control_loop_fc(){
     //pc.printf("%f\t%f\t%f\t%f\t%f\r\n",t.read(),desireSpeed_L,desireSpeed_R,crr_speed_L,crr_speed_R);
       //pc.printf("%f\t%f\r\n",crr_speed_L,crr_speed_R);
   //pc.printf("%f\t%f\t%f\t%f\r\n",desireSpeed_L,desireSpeed_R,crr_speed_L,crr_speed_R);
-      pc.printf("%f\t%f\r\n",desireSpeed_L,crr_speed_L);
+      //pc.printf("%f\t%f\r\n",desireSpeed_L,crr_speed_L);
+      pc.printf("%f\n",error_pos_L );
     //pc.printf("%f\t%f\t%f\t%f\t%f\r\n",desireSpeed_L,motor_control_speed_L,crr_speed_L,err_L,u_L*50000);
     //pc.printf("wheel L = %d,wheel R = %d\n", wheel_L_pos,wheel_R_pos);
 }
